@@ -45,7 +45,7 @@ def normalize_image(image: Image.Image) -> Image.Image:
     normalized_image = ((np_image - min_val) / (max_val - min_val) * 255).astype(np.uint8)
     return Image.fromarray(normalized_image)
 
-model = load_model('static\models\Abdominal_UNet.keras', custom_objects={'combined_loss': combined_loss, 'dice_coefficient': dice_coefficient})
+model = load_model(os.path.join('static', 'models', 'Abdominal_UNet.keras'), custom_objects={'combined_loss': combined_loss, 'dice_coefficient': dice_coefficient})
 
 from PIL import Image
 import matplotlib.pyplot as plt
