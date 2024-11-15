@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Medical Application{% endblock %}</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .container-home {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100vh;
+            -ms-overflow-style: none;  /* Internet Explorer 10+ */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .container-home::-webkit-scrollbar { 
+            display: none;  /* Safari and Chrome */
+        }
+        #home-section, #upload-section {
+            scroll-snap-align: start;
+        }
+        body {
+            font-family: Times;
+            padding-top: 56px;
+            overflow-x: hidden; /* Disable horizontal scrolling */
+        }
+        .navbar {
+            background-color: #5C6B73;
+        }
+        .navbar-brand, .nav-link {
+            color: #E0FBFC !important;
+        }
+        .jumbotron {
+            background-color: #9DB4C0;
+            color: #253237;
+        }
+        .btn-primary {
+            background-color: #C2DFE3;
+            border-color: #C2DFE3;
+            color: #253237;
+        }
+        .btn-primary:hover {
+            background-color: #5C6B73;
+            border-color: #5C6B73;
+            color: #E0FBFC;
+        }
+        .dark-mode {
+            background-color: #253237;
+            color: #E0FBFC;
+        }
+        .dark-mode .navbar {
+            background-color: #253237;
+        }
+        .dark-mode .jumbotron {
+            background-color: #5C6B73;
+            color: #E0FBFC;
+        }
+        .dark-mode .btn-primary {
+            background-color: #9DB4C0;
+            border-color: #9DB4C0;
+            color: #253237;
+        }
+        .dark-mode .btn-primary:hover {
+            background-color: #5C6B73;
+            border-color: #5C6B73;
+            color: #E0FBFC;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-stethoscope" style="margin-right: 10px;"></i>
+            NodeScan
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-secondary" id="theme-toggle">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+    </script>
+</body>
+</html>

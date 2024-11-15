@@ -1,1 +1,87 @@
-<h1>Hello World</h1>
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container-home">
+    <div id="home-section" class="d-flex justify-content-center align-items-center" style="height: 100vh; scroll-snap-align: start;">
+        <div class="text-center">
+            <div class="jumbotron">
+                <h1 class="display-4">Welcome to NodeScan</h1>
+                <p class="lead">This is a medical application that processes CT images to detect lymph nodes.</p>
+                <hr class="my-4">
+                <p>Upload your CT images and get the processed output with detected lymph nodes.</p>
+                <a class="btn btn-primary btn-lg" href="#upload-section" role="button" id="scroll-to-upload">Upload Images</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="upload-section" class="container-fluid" style="height: 100vh; padding-top: 60px; scroll-snap-align: start;">
+        <div class="row w-100">
+            <div class="col-md-4 text-center upload-column pt-3 order-md-2 order-1">
+                <h2 style="margin-bottom: 50px;">Upload CT Images</h2>
+                <form action="{% url 'home' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="custom-file mb-3">
+                        <input type="file" class="custom-file-input" id="customFile" name="image" accept=".png" required>
+                        <label class="custom-file-label" for="customFile">Choose file</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Mask</button>
+                </form>
+                {% if image_base64 %}
+                <a href="data:image/png;base64,{{ image_base64 }}" download="LymphNodeScan-NodeScan.png" class="btn btn-secondary mt-3">Download Processed Image</a>
+                {% endif %}
+            </div>
+            <div class="col-md-7 d-flex justify-content-center align-items-center preview-column order-md-1 order-2">
+                {% if image_base64 %}
+                <div class="mt-5">
+                    <h2>Processed Image</h2>
+                    <img src="data:image/png;base64,{{ image_base64 }}" alt="Processed Image" class="img-fluid" />
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+</div>
+<style>
+    .row {
+        gap: 20px;
+    }
+    .preview-column {
+        background-color: #5C6B73;
+        color: #E0FBFC;
+        border-radius: 10px;
+    }
+    .preview-column img {
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    .upload-column {
+        background-color: #5C6B73;
+        color: #E0FBFC;
+        border-radius: 10px;
+    }
+</style>
+
+<script>
+    // Smooth scroll to upload section
+    document.getElementById('scroll-to-upload').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelector('#upload-section').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Update file input label with selected file name
+    document.getElementById('customFile').addEventListener('change', function(e) {
+        var fileName = e.target.files[0].name;
+        var label = e.target.nextElementSibling;
+        label.textContent = fileName;
+    });
+
+    // Redirect to upload section if image is uploaded
+    {% if redirect_to_upload %}
+    document.querySelector('#upload-section').scrollIntoView({ behavior: 'instant' });
+    {% endif %}
+</script>
+{% endblock %}
