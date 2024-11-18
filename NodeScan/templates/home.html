@@ -19,32 +19,66 @@
 
     <div id="upload-section" class="container-fluid" style="height: 100vh; padding-top: 60px; scroll-snap-align: start;">
         <div class="row w-100">
-            <div class="col-md-4 text-center upload-column pt-3 order-md-2 order-1">
+            <div class="col-md-4 text-center upload-column p-3 order-md-2 order-1">
                 <h2 style="margin-bottom: 50px;">Upload CT Images</h2>
-                <form action="{% url 'home' %}" method="post" enctype="multipart/form-data">
+                <hr style="border-width: 5px">
+                <form id="upload-form" action="{% url 'home' %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="custom-file mb-3">
-                        <input type="file" class="custom-file-input" id="customFile" name="image" accept=".png" required>
-                        <label class="custom-file-label" for="customFile">Choose file</label>
+                        <input type="file" class="custom-file-input" id="customFile" name="images" accept=".png" multiple required>
+                        <label class="custom-file-label" for="customFile">Choose files</label>
                     </div>
-                    <button type="submit" class="btn btn-primary">Mask</button>
+                    <div class="form-group">
+                        <label for="modelSelect">Select Model</label>
+                        <select class="form-control" id="modelSelect" name="model">
+                            <option value="Abdominal_UNet.keras" {% if model_name == "Abdominal_UNet.keras" %}selected{% endif %}>Abdominal CT Scan</option>
+                            <option value="Mediastinal_UNet.keras" {% if model_name == "Mediastinal_UNet.keras" %}selected{% endif %}>Mediastinal CT Scan</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" action=startPrediction()>Mask</button>
+                    <a href="?clear=true" class="btn btn-secondary">Clear</a>
+                    {% if page_images %}
+                    <a href="?download=true" class="btn btn-success">Download</a>
+                    {% endif %}
                 </form>
-                {% if image_base64 %}
-                <a href="data:image/png;base64,{{ image_base64 }}" download="LymphNodeScan-NodeScan.png" class="btn btn-secondary mt-3">Download Processed Image</a>
-                {% endif %}
             </div>
-            <div class="col-md-7 d-flex justify-content-center align-items-center preview-colu  mn order-md-1 order-2">
-                {% if image_base64 %}
-                <div class="mt-5">
-                    <h2>Processed Image</h2>
-                    <img src="data:image/png;base64,{{ image_base64 }}" alt="Processed Image" class="img-fluid" />
+            
+            <div class="col-md-7 p-3 d-flex justify-content-center align-items-center preview-column order-md-1 order-2">
+                {% if page_images %}
+                <div class="mt-5 position-relative w-100">
+                    <h2>Processed Images</h2>
+                    <hr style="border-width: 5px">
+                    {% for image_base64 in page_images %}
+                    <div class="mb-4">
+                        <img src="data:image/png;base64,{{ image_base64 }}" alt="Processed Image" class="img-fluid" />
+                    </div>
+                    {% endfor %}
+                    <div class="pagination position-relative w-100">
+                        <span class="step-links d-flex justify-content-between w-100">
+                            <div class="d-flex justify-content-start">
+                                {% if has_previous %}
+                                    <a href="?page=1" class="btn btn-link">&laquo; first</a>
+                                    <a href="?page={{ page_number|add:"-1" }}" class="btn btn-link">previous</a>
+                                {% endif %}
+                            </div>
+                            <span class="current position-absolute w-100 text-center">
+                                Page {{ page_number }} of {{ total_pages }}.
+                            </span>
+                            <div class="d-flex justify-content-end">
+                                {% if has_next %}
+                                    <a href="?page={{ page_number|add:"1" }}" class="btn btn-link">next</a>
+                                    <a href="?page={{ total_pages }}" class="btn btn-link">last &raquo;</a>
+                                {% endif %}
+                            </div>
+                        </span>
+                    </div>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
-    
 </div>
+<div class="loader" id="main-loader"></div>
 <style>
     .row {
         gap: 20px;
@@ -53,6 +87,8 @@
         background-color: #5C6B73;
         color: #E0FBFC;
         border-radius: 10px;
+        max-height: 800px; /* Set the maximum height */
+        overflow-y: auto; /* Enable vertical scrolling */
     }
     .preview-column img {
         border-radius: 10px;
@@ -62,6 +98,82 @@
         background-color: #5C6B73;
         color: #E0FBFC;
         border-radius: 10px;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .pagination .step-links {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+    }
+    .pagination .step-links a {
+        color: #E0FBFC;
+        background-color: #5C6B73;
+        padding: 5px 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .pagination .step-links a:hover,
+    .pagination .step-links a:focus {
+        background-color: #9DB4C0;
+        color: #253237;
+    }
+    .pagination .step-links .current {
+        font-weight: bold;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .loader {
+        width: 48px;
+        height: 48px;
+        display: block;
+        margin: 20px auto;
+        position: relative;
+        border: 3px solid #FFF;
+        border-radius: 50%;
+        box-sizing: border-box;
+        animation: animloader 2s linear infinite;
+    }
+    .loader::after {
+        content: '';  
+        box-sizing: border-box;
+        width: 6px;
+        height: 24px;
+        background: #FFF;
+        transform: rotate(-45deg);
+        position: absolute;
+        bottom: -20px;
+        left: 46px;
+    }
+    @keyframes animloader {
+        0% {
+            transform: translate(-10px, -10px);
+        }
+        25% {
+            transform: translate(-10px, 10px);
+        }
+        50% {
+            transform: translate(10px, 10px);
+        }
+        75% {
+            transform: translate(10px, -10px);
+        }
+        100% {
+            transform: translate(-10px, -10px);
+        }
+    }
+    #main-loader {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        display: none; /* Initially hidden */
     }
 </style>
 
@@ -83,5 +195,29 @@
     {% if redirect_to_upload %}
     document.querySelector('#upload-section').scrollIntoView({ behavior: 'instant' });
     {% endif %}
+
+    // Clear button functionality
+    document.getElementById('clear-button').addEventListener('click', function() {
+        document.getElementById('customFile').value = '';
+        document.querySelector('.custom-file-label').textContent = 'Choose files';
+        document.querySelector('.preview-column').innerHTML = '';
+        // Clear session data
+        fetch("{% url 'home' %}?clear=true", { method: 'GET' })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Session cleared');
+            });
+    });
+
+    // Show loader on form submit
+    document.getElementById('upload-form').addEventListener('submit', function() {
+        console.log('Animation Triggered');
+        document.getElementById('main-loader').style.display = 'block';
+    });
+
+    // Hide loader when page is fully loaded
+    window.addEventListener('load', function() {
+        document.getElementById('main-loader').style.display = 'none';
+    });
 </script>
 {% endblock %}
